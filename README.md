@@ -1,0 +1,1 @@
+# LLM-with-BigQuery-ML-using-Vertex-AI-PaLM-API
