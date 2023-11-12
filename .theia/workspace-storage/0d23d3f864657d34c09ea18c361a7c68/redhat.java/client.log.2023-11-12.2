@@ -1,0 +1,1321 @@
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Exception occurred during compilation unit conversion:\n' +
+    '----------------------------------- SOURCE BEGIN -------------------------------------\n' +
+    '/* Copyright 2022 Google LLC\n' +
+    '#\n' +
+    '# Licensed under the Apache License, Version 2.0 (the "License");\n' +
+    '# you may not use this file except in compliance with the License.\n' +
+    '# You may obtain a copy of the License at\n' +
+    '#\n' +
+    '#     https://www.apache.org/licenses/LICENSE-2.0\n' +
+    '#\n' +
+    '# Unless required by applicable law or agreed to in writing, software\n' +
+    '# distributed under the License is distributed on an "AS IS" BASIS,\n' +
+    '# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+    '# See the License for the specific language governing permissions and\n' +
+    '# limitations under the License.\n' +
+    '*/\n' +
+    'package com.example.demo;\n' +
+    '\n' +
+    'import org.springframework.web.client.RestTemplate;\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.Collections;\n' +
+    'import java.util.List;\n' +
+    'import java.util.stream.Collectors;\n' +
+    'import org.springframework.web.bind.annotation.GetMapping;\n' +
+    'import org.springframework.web.bind.annotation.PostMapping;\n' +
+    'import org.springframework.web.bind.annotation.PatchMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestParam;\n' +
+    'import org.springframework.web.bind.annotation.RestController;\n' +
+    'import org.springframework.stereotype.Controller;\n' +
+    'import org.springframework.web.server.ServerWebExchange;\n' +
+    'import org.springframework.ui.Model;\n' +
+    'import org.springframework.ui.ModelMap;\n' +
+    'import org.springframework.web.servlet.ModelAndView;\n' +
+    '\n' +
+    '\n' +
+    'import static org.springframework.http.MediaType.APPLICATION_JSON;\n' +
+    '\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.HashMap;\n' +
+    'import java.util.Map;\n' +
+    'import java.util.ArrayList;\n' +
+    'import com.google.cloud.Timestamp;\n' +
+    'import com.google.cloud.Date;\n' +
+    'import org.springframework.core.ParameterizedTypeReference;\n' +
+    'import java.net.URI;\n' +
+    'import java.util.logging.Logger;\n' +
+    '\n' +
+    '\n' +
+    'import org.springframework.http.HttpHeaders;\n' +
+    'import org.springframework.http.MediaType;\n' +
+    'import org.springframework.http.HttpEntity;\n' +
+    'import org.springframework.http.ResponseEntity;\n' +
+    'import org.springframework.http.RequestEntity;\n' +
+    'import org.springframework.http.HttpMethod;\n' +
+    '\n' +
+    'import com.google.auth.http.HttpCredentialsAdapter;\n' +
+    'import com.google.auth.oauth2.GoogleCredentials;\n' +
+    'import com.google.auth.oauth2.*;\n' +
+    'import com.example.demo.Yoga;\n' +
+    'import java.io.InputStream;\n' +
+    'import java.io.*;\n' +
+    'import java.nio.charset.StandardCharsets;\n' +
+    '\n' +
+    'import java.net.http.HttpClient;\n' +
+    'import java.net.http.HttpRequest;\n' +
+    'import java.net.http.HttpRequest.BodyPublishers;\n' +
+    'import java.net.http.HttpResponse; \n' +
+    '\n' +
+    'import org.json.JSONObject;  \n' +
+    'import org.json.JSONArray;  \n' +
+    '\n' +
+    'import jakarta.xml.bind.DatatypeConverter;\n' +
+    '\n' +
+    '@RestController\n' +
+    'public class PromptController {\n' +
+    '    private static final String get_pose_list = "https://yoga-pose-spanner-uxu5wi2jpa-uc.a.run.app/";\n' +
+    '    RestTemplate restTemplate = new RestTemplate();\n' +
+    '    private static final Logger logger = Logger.getLogger(PromptController.class.getName());\n' +
+    '\n' +
+    '\n' +
+    '        /*\n' +
+    '            Method that is invoked to create the prompt, to return the hello HTML page \n' +
+    '        */\n' +
+    '        @GetMapping("/")\n' +
+    '        public ModelAndView extractLabels(ModelMap map, Prompt prompt) {\n' +
+    '            List<String> promptList = getList();\n' +
+    '            map.addAttribute("poselist", promptList);\n' +
+    '            return new ModelAndView("index", map);\n' +
+    '        }\n' +
+    '\n' +
+    '         /*\n' +
+    '            Method that is invoked to add customization to the prompt if any and invoke imagen API\n' +
+    '        */\n' +
+    '        @GetMapping("/getimage")\n' +
+    '        public ModelAndView getImage(Prompt prompt, ModelMap map) {\n' +
+    '            //Pass PROMPT Request Parameter\n' +
+    '            String promptRequest = \n' +
+    `            "{'instances': [ { 'prompt': '" + prompt.getPrompt() + "' } ],'parameters': { 'sampleCount': 1} }";\n` +
+    '            logger.warning("PROMPT REQUEST! " + promptRequest);\n' +
+    '          \n' +
+    '            \n' +
+    '            //Call Imagen API that returns the image in bytesBase64Encoded format\n' +
+    '            String image = callImagen(promptRequest);\n' +
+    '            \n' +
+    '            //Call Cloud Functions that converts Base64Encoded bytes into image\n' +
+    '            //callImageBuilder(image);\n' +
+    '\n' +
+    '            //Return image to HTML\n' +
+    '\n' +
+    '             map.addAttribute("imagestring", image);\n' +
+    '        return new ModelAndView("getimage", map);\n' +
+    '        }\n' +
+    '\n' +
+    '\n' +
+    '    /*\n' +
+    '        Method to invoke the imagen API that takes prompt string as a request and\n' +
+    '        generates the corresponding image.\n' +
+    '    */\n' +
+    '    public File callImageBuilder(String base64){\n' +
+    '        byte[] data = DatatypeConverter.parseBase64Binary(base64);\n' +
+    '        logger.warning("Data! " + data);\n' +
+    '            String path = "/home/abisukumaran/genai-posegen/src/main/resources/templates/" +"pose.jpg";\n' +
+    '            logger.warning("Path! " + path);\n' +
+    '            File file = new File(path);\n' +
+    '            try(OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))){\n' +
+    '                outputStream.write(data);\n' +
+    '            }catch(Exception e){\n' +
+    '                logger.warning("EXCEPTION! " + e);\n' +
+    '            }\n' +
+    '        return file;\n' +
+    '    }\n' +
+    '\n' +
+    '    public String callImagen(String promptRequest){\n' +
+    '      String str = "{\\"client_id\\": "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com","client_secret": "d-FL95Q19q7MQmFpd7hHD0Ty","quota_project_id": "single-shadow-404514","refresh_token": "1//0gRZ5mu2PxM4uCgYIARAAGBASNwF-L9IrMV_OteCKOYtGyUFW0dOosZWD4ireYpD5McbsWLFo95gKCHJ4erkqcdzaTi5mO1nX_k0", "type": "authorized_user"}";\n' +
+    '       \n' +
+    '    \n' +
+    '        try{\n' +
+    '            InputStream stream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));\n' +
+    '            GoogleCredentials credentials = GoogleCredentials.fromStream(stream);\n' +
+    '            String token = credentials.refreshAccessToken().getTokenValue();\n' +
+    '            String paramString = "https://us-central1-aiplatform.googleapis.com/v1/projects/<<your_project>>/locations/us-central1/publishers/google/models/imagegeneration:predict";\n' +
+    '            String jsonString = promptRequest;          \n' +
+    '            \n' +
+    '            HttpHeaders headers = new HttpHeaders();\n' +
+    '            headers.set("Authorization", "Bearer "+token);\n' +
+    '            headers.set("Content-Type", "application/json; charset=utf-8");\n' +
+    '            HttpEntity<String> entity = new HttpEntity<>(jsonString, headers);\n' +
+    '            RestTemplate restTemplate = new RestTemplate();\n' +
+    '            ResponseEntity<String> resultString = restTemplate.exchange(paramString, HttpMethod.POST, entity, String.class);\n' +
+    '            \n' +
+    '           String result = resultString.toString();\n' +
+    '            //process response\n' +
+    '            JSONObject jsonObject = new JSONObject(result.substring(5));\n' +
+    '            String base64 = jsonObject.getJSONArray("predictions").getJSONObject(0).getString("bytesBase64Encoded");\n' +
+    '     return base64;\n' +
+    '}catch(Exception e){\n' +
+    '    System.out.println("EXCEPTION in edit" + e);\n' +
+    '    return null;\n' +
+    '}\n' +
+    '    }\n' +
+    '    /*\n' +
+    '        Method to invoke API that retrieves a specific pose\n' +
+    '        GetMapping("/getList")\n' +
+    '    */\n' +
+    '    \n' +
+    '    public List<String> getList(){\n' +
+    '        \n' +
+    '        HttpHeaders headers = new HttpHeaders();\n' +
+    '        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));\n' +
+    '        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);\n' +
+    '        ResponseEntity<String> resultString = restTemplate.exchange(get_pose_list, HttpMethod.GET, entity, String.class);\n' +
+    '        String responseString = resultString.getBody().toString();\n' +
+    '        responseString = responseString.replace("[", "").replace("]", "").replace("},", "};");        \n' +
+    '        String[] split = responseString.split(";");\n' +
+    '        List<String> list = Arrays.asList(split);\n' +
+    '        List<String> poseList = new ArrayList<String>();\n' +
+    '        \n' +
+    '        try{\n' +
+    '            for(String pose : list){\n' +
+    '                String poseString = pose;\n' +
+    '                poseString = poseString.replace("{", "").replace("}", "").replace("\\"", "");\n' +
+    '                String[] splitPoseString = poseString.split(",");\n' +
+    '                String name = splitPoseString[1].split(":")[1];\n' +
+    '                String breath = splitPoseString[2].split(":")[1];\n' +
+    '                String desc = splitPoseString[3].split(":")[1];\n' +
+    '                poseList.add(name);\n' +
+    '            }\n' +
+    '        } catch(Exception e){\n' +
+    '            poseList = null;\n' +
+    '            logger.warning("Exception! " + e);\n' +
+    '        }\n' +
+    '        logger.warning("I am a warning log ! " + poseList.get(0));\n' +
+    '\t\t\n' +
+    '      return poseList;\n' +
+    '    }\n' +
+    '    \n' +
+    '}\n' +
+    '\n' +
+    '----------------------------------- SOURCE END -------------------------------------\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.220'
+}
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.224'
+}
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Error in JDT Core during AST creation\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.225'
+}
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Exception occurred during compilation unit conversion:\n' +
+    '----------------------------------- SOURCE BEGIN -------------------------------------\n' +
+    '/* Copyright 2022 Google LLC\n' +
+    '#\n' +
+    '# Licensed under the Apache License, Version 2.0 (the "License");\n' +
+    '# you may not use this file except in compliance with the License.\n' +
+    '# You may obtain a copy of the License at\n' +
+    '#\n' +
+    '#     https://www.apache.org/licenses/LICENSE-2.0\n' +
+    '#\n' +
+    '# Unless required by applicable law or agreed to in writing, software\n' +
+    '# distributed under the License is distributed on an "AS IS" BASIS,\n' +
+    '# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+    '# See the License for the specific language governing permissions and\n' +
+    '# limitations under the License.\n' +
+    '*/\n' +
+    'package com.example.demo;\n' +
+    '\n' +
+    'import org.springframework.web.client.RestTemplate;\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.Collections;\n' +
+    'import java.util.List;\n' +
+    'import java.util.stream.Collectors;\n' +
+    'import org.springframework.web.bind.annotation.GetMapping;\n' +
+    'import org.springframework.web.bind.annotation.PostMapping;\n' +
+    'import org.springframework.web.bind.annotation.PatchMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestParam;\n' +
+    'import org.springframework.web.bind.annotation.RestController;\n' +
+    'import org.springframework.stereotype.Controller;\n' +
+    'import org.springframework.web.server.ServerWebExchange;\n' +
+    'import org.springframework.ui.Model;\n' +
+    'import org.springframework.ui.ModelMap;\n' +
+    'import org.springframework.web.servlet.ModelAndView;\n' +
+    '\n' +
+    '\n' +
+    'import static org.springframework.http.MediaType.APPLICATION_JSON;\n' +
+    '\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.HashMap;\n' +
+    'import java.util.Map;\n' +
+    'import java.util.ArrayList;\n' +
+    'import com.google.cloud.Timestamp;\n' +
+    'import com.google.cloud.Date;\n' +
+    'import org.springframework.core.ParameterizedTypeReference;\n' +
+    'import java.net.URI;\n' +
+    'import java.util.logging.Logger;\n' +
+    '\n' +
+    '\n' +
+    'import org.springframework.http.HttpHeaders;\n' +
+    'import org.springframework.http.MediaType;\n' +
+    'import org.springframework.http.HttpEntity;\n' +
+    'import org.springframework.http.ResponseEntity;\n' +
+    'import org.springframework.http.RequestEntity;\n' +
+    'import org.springframework.http.HttpMethod;\n' +
+    '\n' +
+    'import com.google.auth.http.HttpCredentialsAdapter;\n' +
+    'import com.google.auth.oauth2.GoogleCredentials;\n' +
+    'import com.google.auth.oauth2.*;\n' +
+    'import com.example.demo.Yoga;\n' +
+    'import java.io.InputStream;\n' +
+    'import java.io.*;\n' +
+    'import java.nio.charset.StandardCharsets;\n' +
+    '\n' +
+    'import java.net.http.HttpClient;\n' +
+    'import java.net.http.HttpRequest;\n' +
+    'import java.net.http.HttpRequest.BodyPublishers;\n' +
+    'import java.net.http.HttpResponse; \n' +
+    '\n' +
+    'import org.json.JSONObject;  \n' +
+    'import org.json.JSONArray;  \n' +
+    '\n' +
+    'import jakarta.xml.bind.DatatypeConverter;\n' +
+    '\n' +
+    '@RestController\n' +
+    'public class PromptController {\n' +
+    '    private static final String get_pose_list = "https://yoga-pose-spanner-uxu5wi2jpa-uc.a.run.app/";\n' +
+    '    RestTemplate restTemplate = new RestTemplate();\n' +
+    '    private static final Logger logger = Logger.getLogger(PromptController.class.getName());\n' +
+    '\n' +
+    '\n' +
+    '        /*\n' +
+    '            Method that is invoked to create the prompt, to return the hello HTML page \n' +
+    '        */\n' +
+    '        @GetMapping("/")\n' +
+    '        public ModelAndView extractLabels(ModelMap map, Prompt prompt) {\n' +
+    '            List<String> promptList = getList();\n' +
+    '            map.addAttribute("poselist", promptList);\n' +
+    '            return new ModelAndView("index", map);\n' +
+    '        }\n' +
+    '\n' +
+    '         /*\n' +
+    '            Method that is invoked to add customization to the prompt if any and invoke imagen API\n' +
+    '        */\n' +
+    '        @GetMapping("/getimage")\n' +
+    '        public ModelAndView getImage(Prompt prompt, ModelMap map) {\n' +
+    '            //Pass PROMPT Request Parameter\n' +
+    '            String promptRequest = \n' +
+    `            "{'instances': [ { 'prompt': '" + prompt.getPrompt() + "' } ],'parameters': { 'sampleCount': 1} }";\n` +
+    '            logger.warning("PROMPT REQUEST! " + promptRequest);\n' +
+    '          \n' +
+    '            \n' +
+    '            //Call Imagen API that returns the image in bytesBase64Encoded format\n' +
+    '            String image = callImagen(promptRequest);\n' +
+    '            \n' +
+    '            //Call Cloud Functions that converts Base64Encoded bytes into image\n' +
+    '            //callImageBuilder(image);\n' +
+    '\n' +
+    '            //Return image to HTML\n' +
+    '\n' +
+    '             map.addAttribute("imagestring", image);\n' +
+    '        return new ModelAndView("getimage", map);\n' +
+    '        }\n' +
+    '\n' +
+    '\n' +
+    '    /*\n' +
+    '        Method to invoke the imagen API that takes prompt string as a request and\n' +
+    '        generates the corresponding image.\n' +
+    '    */\n' +
+    '    public File callImageBuilder(String base64){\n' +
+    '        byte[] data = DatatypeConverter.parseBase64Binary(base64);\n' +
+    '        logger.warning("Data! " + data);\n' +
+    '            String path = "/home/abisukumaran/genai-posegen/src/main/resources/templates/" +"pose.jpg";\n' +
+    '            logger.warning("Path! " + path);\n' +
+    '            File file = new File(path);\n' +
+    '            try(OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))){\n' +
+    '                outputStream.write(data);\n' +
+    '            }catch(Exception e){\n' +
+    '                logger.warning("EXCEPTION! " + e);\n' +
+    '            }\n' +
+    '        return file;\n' +
+    '    }\n' +
+    '\n' +
+    '    public String callImagen(String promptRequest){\n' +
+    '      String str = "{\\"client_id\\": "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com","client_secret": "d-FL95Q19q7MQmFpd7hHD0Ty","quota_project_id": "single-shadow-404514","refresh_token": "1//0gRZ5mu2PxM4uCgYIARAAGBASNwF-L9IrMV_OteCKOYtGyUFW0dOosZWD4ireYpD5McbsWLFo95gKCHJ4erkqcdzaTi5mO1nX_k0", "type": "authorized_user"}";\n' +
+    '       \n' +
+    '    \n' +
+    '        try{\n' +
+    '            InputStream stream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));\n' +
+    '            GoogleCredentials credentials = GoogleCredentials.fromStream(stream);\n' +
+    '            String token = credentials.refreshAccessToken().getTokenValue();\n' +
+    '            String paramString = "https://us-central1-aiplatform.googleapis.com/v1/projects/<<your_project>>/locations/us-central1/publishers/google/models/imagegeneration:predict";\n' +
+    '            String jsonString = promptRequest;          \n' +
+    '            \n' +
+    '            HttpHeaders headers = new HttpHeaders();\n' +
+    '            headers.set("Authorization", "Bearer "+token);\n' +
+    '            headers.set("Content-Type", "application/json; charset=utf-8");\n' +
+    '            HttpEntity<String> entity = new HttpEntity<>(jsonString, headers);\n' +
+    '            RestTemplate restTemplate = new RestTemplate();\n' +
+    '            ResponseEntity<String> resultString = restTemplate.exchange(paramString, HttpMethod.POST, entity, String.class);\n' +
+    '            \n' +
+    '           String result = resultString.toString();\n' +
+    '            //process response\n' +
+    '            JSONObject jsonObject = new JSONObject(result.substring(5));\n' +
+    '            String base64 = jsonObject.getJSONArray("predictions").getJSONObject(0).getString("bytesBase64Encoded");\n' +
+    '     return base64;\n' +
+    '}catch(Exception e){\n' +
+    '    System.out.println("EXCEPTION in edit" + e);\n' +
+    '    return null;\n' +
+    '}\n' +
+    '    }\n' +
+    '    /*\n' +
+    '        Method to invoke API that retrieves a specific pose\n' +
+    '        GetMapping("/getList")\n' +
+    '    */\n' +
+    '    \n' +
+    '    public List<String> getList(){\n' +
+    '        \n' +
+    '        HttpHeaders headers = new HttpHeaders();\n' +
+    '        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));\n' +
+    '        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);\n' +
+    '        ResponseEntity<String> resultString = restTemplate.exchange(get_pose_list, HttpMethod.GET, entity, String.class);\n' +
+    '        String responseString = resultString.getBody().toString();\n' +
+    '        responseString = responseString.replace("[", "").replace("]", "").replace("},", "};");        \n' +
+    '        String[] split = responseString.split(";");\n' +
+    '        List<String> list = Arrays.asList(split);\n' +
+    '        List<String> poseList = new ArrayList<String>();\n' +
+    '        \n' +
+    '        try{\n' +
+    '            for(String pose : list){\n' +
+    '                String poseString = pose;\n' +
+    '                poseString = poseString.replace("{", "").replace("}", "").replace("\\"", "");\n' +
+    '                String[] splitPoseString = poseString.split(",");\n' +
+    '                String name = splitPoseString[1].split(":")[1];\n' +
+    '                String breath = splitPoseString[2].split(":")[1];\n' +
+    '                String desc = splitPoseString[3].split(":")[1];\n' +
+    '                poseList.add(name);\n' +
+    '            }\n' +
+    '        } catch(Exception e){\n' +
+    '            poseList = null;\n' +
+    '            logger.warning("Exception! " + e);\n' +
+    '        }\n' +
+    '        logger.warning("I am a warning log ! " + poseList.get(0));\n' +
+    '\t\t\n' +
+    '      return poseList;\n' +
+    '    }\n' +
+    '    \n' +
+    '}\n' +
+    '\n' +
+    '----------------------------------- SOURCE END -------------------------------------\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.publishDiagnostics(BaseDocumentLifeCycleHandler.java:242)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$2.runInWorkspace(BaseDocumentLifeCycleHandler.java:117)\n' +
+    '\tat org.eclipse.core.internal.resources.InternalWorkspaceJob.run(InternalWorkspaceJob.java:42)\n' +
+    '\tat org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.515'
+}
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.publishDiagnostics(BaseDocumentLifeCycleHandler.java:242)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$2.runInWorkspace(BaseDocumentLifeCycleHandler.java:117)\n' +
+    '\tat org.eclipse.core.internal.resources.InternalWorkspaceJob.run(InternalWorkspaceJob.java:42)\n' +
+    '\tat org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.517'
+}
+{
+  message: '[Error - 3:37:38 PM] Nov 12, 2023, 3:37:38 PM Error in JDT Core during AST creation\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.publishDiagnostics(BaseDocumentLifeCycleHandler.java:242)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$2.runInWorkspace(BaseDocumentLifeCycleHandler.java:117)\n' +
+    '\tat org.eclipse.core.internal.resources.InternalWorkspaceJob.run(InternalWorkspaceJob.java:42)\n' +
+    '\tat org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:38.518'
+}
+{
+  message: '[Error - 3:37:39 PM] Nov 12, 2023, 3:37:39 PM Exception occurred during compilation unit conversion:\n' +
+    '----------------------------------- SOURCE BEGIN -------------------------------------\n' +
+    '/* Copyright 2022 Google LLC\n' +
+    '#\n' +
+    '# Licensed under the Apache License, Version 2.0 (the "License");\n' +
+    '# you may not use this file except in compliance with the License.\n' +
+    '# You may obtain a copy of the License at\n' +
+    '#\n' +
+    '#     https://www.apache.org/licenses/LICENSE-2.0\n' +
+    '#\n' +
+    '# Unless required by applicable law or agreed to in writing, software\n' +
+    '# distributed under the License is distributed on an "AS IS" BASIS,\n' +
+    '# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+    '# See the License for the specific language governing permissions and\n' +
+    '# limitations under the License.\n' +
+    '*/\n' +
+    'package com.example.demo;\n' +
+    '\n' +
+    'import org.springframework.web.client.RestTemplate;\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.Collections;\n' +
+    'import java.util.List;\n' +
+    'import java.util.stream.Collectors;\n' +
+    'import org.springframework.web.bind.annotation.GetMapping;\n' +
+    'import org.springframework.web.bind.annotation.PostMapping;\n' +
+    'import org.springframework.web.bind.annotation.PatchMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestParam;\n' +
+    'import org.springframework.web.bind.annotation.RestController;\n' +
+    'import org.springframework.stereotype.Controller;\n' +
+    'import org.springframework.web.server.ServerWebExchange;\n' +
+    'import org.springframework.ui.Model;\n' +
+    'import org.springframework.ui.ModelMap;\n' +
+    'import org.springframework.web.servlet.ModelAndView;\n' +
+    '\n' +
+    '\n' +
+    'import static org.springframework.http.MediaType.APPLICATION_JSON;\n' +
+    '\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.HashMap;\n' +
+    'import java.util.Map;\n' +
+    'import java.util.ArrayList;\n' +
+    'import com.google.cloud.Timestamp;\n' +
+    'import com.google.cloud.Date;\n' +
+    'import org.springframework.core.ParameterizedTypeReference;\n' +
+    'import java.net.URI;\n' +
+    'import java.util.logging.Logger;\n' +
+    '\n' +
+    '\n' +
+    'import org.springframework.http.HttpHeaders;\n' +
+    'import org.springframework.http.MediaType;\n' +
+    'import org.springframework.http.HttpEntity;\n' +
+    'import org.springframework.http.ResponseEntity;\n' +
+    'import org.springframework.http.RequestEntity;\n' +
+    'import org.springframework.http.HttpMethod;\n' +
+    '\n' +
+    'import com.google.auth.http.HttpCredentialsAdapter;\n' +
+    'import com.google.auth.oauth2.GoogleCredentials;\n' +
+    'import com.google.auth.oauth2.*;\n' +
+    'import com.example.demo.Yoga;\n' +
+    'import java.io.InputStream;\n' +
+    'import java.io.*;\n' +
+    'import java.nio.charset.StandardCharsets;\n' +
+    '\n' +
+    'import java.net.http.HttpClient;\n' +
+    'import java.net.http.HttpRequest;\n' +
+    'import java.net.http.HttpRequest.BodyPublishers;\n' +
+    'import java.net.http.HttpResponse; \n' +
+    '\n' +
+    'import org.json.JSONObject;  \n' +
+    'import org.json.JSONArray;  \n' +
+    '\n' +
+    'import jakarta.xml.bind.DatatypeConverter;\n' +
+    '\n' +
+    '@RestController\n' +
+    'public class PromptController {\n' +
+    '    private static final String get_pose_list = "https://yoga-pose-spanner-uxu5wi2jpa-uc.a.run.app/";\n' +
+    '    RestTemplate restTemplate = new RestTemplate();\n' +
+    '    private static final Logger logger = Logger.getLogger(PromptController.class.getName());\n' +
+    '\n' +
+    '\n' +
+    '        /*\n' +
+    '            Method that is invoked to create the prompt, to return the hello HTML page \n' +
+    '        */\n' +
+    '        @GetMapping("/")\n' +
+    '        public ModelAndView extractLabels(ModelMap map, Prompt prompt) {\n' +
+    '            List<String> promptList = getList();\n' +
+    '            map.addAttribute("poselist", promptList);\n' +
+    '            return new ModelAndView("index", map);\n' +
+    '        }\n' +
+    '\n' +
+    '         /*\n' +
+    '            Method that is invoked to add customization to the prompt if any and invoke imagen API\n' +
+    '        */\n' +
+    '        @GetMapping("/getimage")\n' +
+    '        public ModelAndView getImage(Prompt prompt, ModelMap map) {\n' +
+    '            //Pass PROMPT Request Parameter\n' +
+    '            String promptRequest = \n' +
+    `            "{'instances': [ { 'prompt': '" + prompt.getPrompt() + "' } ],'parameters': { 'sampleCount': 1} }";\n` +
+    '            logger.warning("PROMPT REQUEST! " + promptRequest);\n' +
+    '          \n' +
+    '            \n' +
+    '            //Call Imagen API that returns the image in bytesBase64Encoded format\n' +
+    '            String image = callImagen(promptRequest);\n' +
+    '            \n' +
+    '            //Call Cloud Functions that converts Base64Encoded bytes into image\n' +
+    '            //callImageBuilder(image);\n' +
+    '\n' +
+    '            //Return image to HTML\n' +
+    '\n' +
+    '             map.addAttribute("imagestring", image);\n' +
+    '        return new ModelAndView("getimage", map);\n' +
+    '        }\n' +
+    '\n' +
+    '\n' +
+    '    /*\n' +
+    '        Method to invoke the imagen API that takes prompt string as a request and\n' +
+    '        generates the corresponding image.\n' +
+    '    */\n' +
+    '    public File callImageBuilder(String base64){\n' +
+    '        byte[] data = DatatypeConverter.parseBase64Binary(base64);\n' +
+    '        logger.warning("Data! " + data);\n' +
+    '            String path = "/home/abisukumaran/genai-posegen/src/main/resources/templates/" +"pose.jpg";\n' +
+    '            logger.warning("Path! " + path);\n' +
+    '            File file = new File(path);\n' +
+    '            try(OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))){\n' +
+    '                outputStream.write(data);\n' +
+    '            }catch(Exception e){\n' +
+    '                logger.warning("EXCEPTION! " + e);\n' +
+    '            }\n' +
+    '        return file;\n' +
+    '    }\n' +
+    '\n' +
+    '    public String callImagen(String promptRequest){\n' +
+    '      String str = "{\\"client_id\\": "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com","client_secret": "d-FL95Q19q7MQmFpd7hHD0Ty","quota_project_id": "single-shadow-404514","refresh_token": "1//0gRZ5mu2PxM4uCgYIARAAGBASNwF-L9IrMV_OteCKOYtGyUFW0dOosZWD4ireYpD5McbsWLFo95gKCHJ4erkqcdzaTi5mO1nX_k0", "type": "authorized_user"}";\n' +
+    '       \n' +
+    '    \n' +
+    '        try{\n' +
+    '            InputStream stream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));\n' +
+    '            GoogleCredentials credentials = GoogleCredentials.fromStream(stream);\n' +
+    '            String token = credentials.refreshAccessToken().getTokenValue();\n' +
+    '            String paramString = "https://us-central1-aiplatform.googleapis.com/v1/projects/<<your_project>>/locations/us-central1/publishers/google/models/imagegeneration:predict";\n' +
+    '            String jsonString = promptRequest;          \n' +
+    '            \n' +
+    '            HttpHeaders headers = new HttpHeaders();\n' +
+    '            headers.set("Authorization", "Bearer "+token);\n' +
+    '            headers.set("Content-Type", "application/json; charset=utf-8");\n' +
+    '            HttpEntity<String> entity = new HttpEntity<>(jsonString, headers);\n' +
+    '            RestTemplate restTemplate = new RestTemplate();\n' +
+    '            ResponseEntity<String> resultString = restTemplate.exchange(paramString, HttpMethod.POST, entity, String.class);\n' +
+    '            \n' +
+    '           String result = resultString.toString();\n' +
+    '            //process response\n' +
+    '            JSONObject jsonObject = new JSONObject(result.substring(5));\n' +
+    '            String base64 = jsonObject.getJSONArray("predictions").getJSONObject(0).getString("bytesBase64Encoded");\n' +
+    '     return base64;\n' +
+    '}catch(Exception e){\n' +
+    '    System.out.println("EXCEPTION in edit" + e);\n' +
+    '    return null;\n' +
+    '}\n' +
+    '    }\n' +
+    '    /*\n' +
+    '        Method to invoke API that retrieves a specific pose\n' +
+    '        GetMapping("/getList")\n' +
+    '    */\n' +
+    '    \n' +
+    '    public List<String> getList(){\n' +
+    '        \n' +
+    '        HttpHeaders headers = new HttpHeaders();\n' +
+    '        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));\n' +
+    '        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);\n' +
+    '        ResponseEntity<String> resultString = restTemplate.exchange(get_pose_list, HttpMethod.GET, entity, String.class);\n' +
+    '        String responseString = resultString.getBody().toString();\n' +
+    '        responseString = responseString.replace("[", "").replace("]", "").replace("},", "};");        \n' +
+    '        String[] split = responseString.split(";");\n' +
+    '        List<String> list = Arrays.asList(split);\n' +
+    '        List<String> poseList = new ArrayList<String>();\n' +
+    '        \n' +
+    '        try{\n' +
+    '            for(String pose : list){\n' +
+    '                String poseString = pose;\n' +
+    '                poseString = poseString.replace("{", "").replace("}", "").replace("\\"", "");\n' +
+    '                String[] splitPoseString = poseString.split(",");\n' +
+    '                String name = splitPoseString[1].split(":")[1];\n' +
+    '                String breath = splitPoseString[2].split(":")[1];\n' +
+    '                String desc = splitPoseString[3].split(":")[1];\n' +
+    '                poseList.add(name);\n' +
+    '            }\n' +
+    '        } catch(Exception e){\n' +
+    '            poseList = null;\n' +
+    '            logger.warning("Exception! " + e);\n' +
+    '        }\n' +
+    '        logger.warning("I am a warning log ! " + poseList.get(0));\n' +
+    '\t\t\n' +
+    '      return poseList;\n' +
+    '    }\n' +
+    '    \n' +
+    '}\n' +
+    '\n' +
+    '----------------------------------- SOURCE END -------------------------------------\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.checkPackageDeclaration(BaseDocumentLifeCycleHandler.java:514)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.handleSaved(BaseDocumentLifeCycleHandler.java:491)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$7.run(BaseDocumentLifeCycleHandler.java:340)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2313)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2338)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.didSave(BaseDocumentLifeCycleHandler.java:337)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.didSave(JDTLanguageServer.java:795)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n' +
+    '\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n' +
+    '\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$null$0(GenericEndpoint.java:65)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:152)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:220)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:187)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.ParentProcessWatcher.lambda$0(ParentProcessWatcher.java:123)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:194)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:94)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:113)\n' +
+    '\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n' +
+    '\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n' +
+    '\tat java.base/java.lang.Thread.run(Thread.java:833)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:39.160'
+}
+{
+  message: '[Error - 3:37:39 PM] Nov 12, 2023, 3:37:39 PM Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.checkPackageDeclaration(BaseDocumentLifeCycleHandler.java:514)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.handleSaved(BaseDocumentLifeCycleHandler.java:491)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$7.run(BaseDocumentLifeCycleHandler.java:340)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2313)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2338)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.didSave(BaseDocumentLifeCycleHandler.java:337)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.didSave(JDTLanguageServer.java:795)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n' +
+    '\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n' +
+    '\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$null$0(GenericEndpoint.java:65)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:152)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:220)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:187)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.ParentProcessWatcher.lambda$0(ParentProcessWatcher.java:123)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:194)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:94)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:113)\n' +
+    '\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n' +
+    '\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n' +
+    '\tat java.base/java.lang.Thread.run(Thread.java:833)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:39.163'
+}
+{
+  message: '[Error - 3:37:39 PM] Nov 12, 2023, 3:37:39 PM Error in JDT Core during AST creation\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.checkPackageDeclaration(BaseDocumentLifeCycleHandler.java:514)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.handleSaved(BaseDocumentLifeCycleHandler.java:491)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$7.run(BaseDocumentLifeCycleHandler.java:340)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2313)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2338)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.didSave(BaseDocumentLifeCycleHandler.java:337)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.didSave(JDTLanguageServer.java:795)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n' +
+    '\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n' +
+    '\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$null$0(GenericEndpoint.java:65)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:152)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:220)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:187)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.ParentProcessWatcher.lambda$0(ParentProcessWatcher.java:123)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:194)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:94)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:113)\n' +
+    '\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n' +
+    '\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n' +
+    '\tat java.base/java.lang.Thread.run(Thread.java:833)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:39.165'
+}
+{
+  message: '[Error - 3:37:40 PM] Nov 12, 2023, 3:37:40 PM Exception occurred during compilation unit conversion:\n' +
+    '----------------------------------- SOURCE BEGIN -------------------------------------\n' +
+    '/* Copyright 2022 Google LLC\n' +
+    '#\n' +
+    '# Licensed under the Apache License, Version 2.0 (the "License");\n' +
+    '# you may not use this file except in compliance with the License.\n' +
+    '# You may obtain a copy of the License at\n' +
+    '#\n' +
+    '#     https://www.apache.org/licenses/LICENSE-2.0\n' +
+    '#\n' +
+    '# Unless required by applicable law or agreed to in writing, software\n' +
+    '# distributed under the License is distributed on an "AS IS" BASIS,\n' +
+    '# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+    '# See the License for the specific language governing permissions and\n' +
+    '# limitations under the License.\n' +
+    '*/\n' +
+    'package com.example.demo;\n' +
+    '\n' +
+    'import org.springframework.web.client.RestTemplate;\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.Collections;\n' +
+    'import java.util.List;\n' +
+    'import java.util.stream.Collectors;\n' +
+    'import org.springframework.web.bind.annotation.GetMapping;\n' +
+    'import org.springframework.web.bind.annotation.PostMapping;\n' +
+    'import org.springframework.web.bind.annotation.PatchMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestMapping;\n' +
+    'import org.springframework.web.bind.annotation.RequestParam;\n' +
+    'import org.springframework.web.bind.annotation.RestController;\n' +
+    'import org.springframework.stereotype.Controller;\n' +
+    'import org.springframework.web.server.ServerWebExchange;\n' +
+    'import org.springframework.ui.Model;\n' +
+    'import org.springframework.ui.ModelMap;\n' +
+    'import org.springframework.web.servlet.ModelAndView;\n' +
+    '\n' +
+    '\n' +
+    'import static org.springframework.http.MediaType.APPLICATION_JSON;\n' +
+    '\n' +
+    'import java.util.Arrays;\n' +
+    'import java.util.HashMap;\n' +
+    'import java.util.Map;\n' +
+    'import java.util.ArrayList;\n' +
+    'import com.google.cloud.Timestamp;\n' +
+    'import com.google.cloud.Date;\n' +
+    'import org.springframework.core.ParameterizedTypeReference;\n' +
+    'import java.net.URI;\n' +
+    'import java.util.logging.Logger;\n' +
+    '\n' +
+    '\n' +
+    'import org.springframework.http.HttpHeaders;\n' +
+    'import org.springframework.http.MediaType;\n' +
+    'import org.springframework.http.HttpEntity;\n' +
+    'import org.springframework.http.ResponseEntity;\n' +
+    'import org.springframework.http.RequestEntity;\n' +
+    'import org.springframework.http.HttpMethod;\n' +
+    '\n' +
+    'import com.google.auth.http.HttpCredentialsAdapter;\n' +
+    'import com.google.auth.oauth2.GoogleCredentials;\n' +
+    'import com.google.auth.oauth2.*;\n' +
+    'import com.example.demo.Yoga;\n' +
+    'import java.io.InputStream;\n' +
+    'import java.io.*;\n' +
+    'import java.nio.charset.StandardCharsets;\n' +
+    '\n' +
+    'import java.net.http.HttpClient;\n' +
+    'import java.net.http.HttpRequest;\n' +
+    'import java.net.http.HttpRequest.BodyPublishers;\n' +
+    'import java.net.http.HttpResponse; \n' +
+    '\n' +
+    'import org.json.JSONObject;  \n' +
+    'import org.json.JSONArray;  \n' +
+    '\n' +
+    'import jakarta.xml.bind.DatatypeConverter;\n' +
+    '\n' +
+    '@RestController\n' +
+    'public class PromptController {\n' +
+    '    private static final String get_pose_list = "https://yoga-pose-spanner-uxu5wi2jpa-uc.a.run.app/";\n' +
+    '    RestTemplate restTemplate = new RestTemplate();\n' +
+    '    private static final Logger logger = Logger.getLogger(PromptController.class.getName());\n' +
+    '\n' +
+    '\n' +
+    '        /*\n' +
+    '            Method that is invoked to create the prompt, to return the hello HTML page \n' +
+    '        */\n' +
+    '        @GetMapping("/")\n' +
+    '        public ModelAndView extractLabels(ModelMap map, Prompt prompt) {\n' +
+    '            List<String> promptList = getList();\n' +
+    '            map.addAttribute("poselist", promptList);\n' +
+    '            return new ModelAndView("index", map);\n' +
+    '        }\n' +
+    '\n' +
+    '         /*\n' +
+    '            Method that is invoked to add customization to the prompt if any and invoke imagen API\n' +
+    '        */\n' +
+    '        @GetMapping("/getimage")\n' +
+    '        public ModelAndView getImage(Prompt prompt, ModelMap map) {\n' +
+    '            //Pass PROMPT Request Parameter\n' +
+    '            String promptRequest = \n' +
+    `            "{'instances': [ { 'prompt': '" + prompt.getPrompt() + "' } ],'parameters': { 'sampleCount': 1} }";\n` +
+    '            logger.warning("PROMPT REQUEST! " + promptRequest);\n' +
+    '          \n' +
+    '            \n' +
+    '            //Call Imagen API that returns the image in bytesBase64Encoded format\n' +
+    '            String image = callImagen(promptRequest);\n' +
+    '            \n' +
+    '            //Call Cloud Functions that converts Base64Encoded bytes into image\n' +
+    '            //callImageBuilder(image);\n' +
+    '\n' +
+    '            //Return image to HTML\n' +
+    '\n' +
+    '             map.addAttribute("imagestring", image);\n' +
+    '        return new ModelAndView("getimage", map);\n' +
+    '        }\n' +
+    '\n' +
+    '\n' +
+    '    /*\n' +
+    '        Method to invoke the imagen API that takes prompt string as a request and\n' +
+    '        generates the corresponding image.\n' +
+    '    */\n' +
+    '    public File callImageBuilder(String base64){\n' +
+    '        byte[] data = DatatypeConverter.parseBase64Binary(base64);\n' +
+    '        logger.warning("Data! " + data);\n' +
+    '            String path = "/home/abisukumaran/genai-posegen/src/main/resources/templates/" +"pose.jpg";\n' +
+    '            logger.warning("Path! " + path);\n' +
+    '            File file = new File(path);\n' +
+    '            try(OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))){\n' +
+    '                outputStream.write(data);\n' +
+    '            }catch(Exception e){\n' +
+    '                logger.warning("EXCEPTION! " + e);\n' +
+    '            }\n' +
+    '        return file;\n' +
+    '    }\n' +
+    '\n' +
+    '    public String callImagen(String promptRequest){\n' +
+    '      String str = "{\\"client_id\\": "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com","client_secret": "d-FL95Q19q7MQmFpd7hHD0Ty","quota_project_id": "single-shadow-404514","refresh_token": "1//0gRZ5mu2PxM4uCgYIARAAGBASNwF-L9IrMV_OteCKOYtGyUFW0dOosZWD4ireYpD5McbsWLFo95gKCHJ4erkqcdzaTi5mO1nX_k0", "type": "authorized_user"}";\n' +
+    '       \n' +
+    '    \n' +
+    '        try{\n' +
+    '            InputStream stream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));\n' +
+    '            GoogleCredentials credentials = GoogleCredentials.fromStream(stream);\n' +
+    '            String token = credentials.refreshAccessToken().getTokenValue();\n' +
+    '            String paramString = "https://us-central1-aiplatform.googleapis.com/v1/projects/<<your_project>>/locations/us-central1/publishers/google/models/imagegeneration:predict";\n' +
+    '            String jsonString = promptRequest;          \n' +
+    '            \n' +
+    '            HttpHeaders headers = new HttpHeaders();\n' +
+    '            headers.set("Authorization", "Bearer "+token);\n' +
+    '            headers.set("Content-Type", "application/json; charset=utf-8");\n' +
+    '            HttpEntity<String> entity = new HttpEntity<>(jsonString, headers);\n' +
+    '            RestTemplate restTemplate = new RestTemplate();\n' +
+    '            ResponseEntity<String> resultString = restTemplate.exchange(paramString, HttpMethod.POST, entity, String.class);\n' +
+    '            \n' +
+    '           String result = resultString.toString();\n' +
+    '            //process response\n' +
+    '            JSONObject jsonObject = new JSONObject(result.substring(5));\n' +
+    '            String base64 = jsonObject.getJSONArray("predictions").getJSONObject(0).getString("bytesBase64Encoded");\n' +
+    '     return base64;\n' +
+    '}catch(Exception e){\n' +
+    '    System.out.println("EXCEPTION in edit" + e);\n' +
+    '    return null;\n' +
+    '}\n' +
+    '    }\n' +
+    '    /*\n' +
+    '        Method to invoke API that retrieves a specific pose\n' +
+    '        GetMapping("/getList")\n' +
+    '    */\n' +
+    '    \n' +
+    '    public List<String> getList(){\n' +
+    '        \n' +
+    '        HttpHeaders headers = new HttpHeaders();\n' +
+    '        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));\n' +
+    '        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);\n' +
+    '        ResponseEntity<String> resultString = restTemplate.exchange(get_pose_list, HttpMethod.GET, entity, String.class);\n' +
+    '        String responseString = resultString.getBody().toString();\n' +
+    '        responseString = responseString.replace("[", "").replace("]", "").replace("},", "};");        \n' +
+    '        String[] split = responseString.split(";");\n' +
+    '        List<String> list = Arrays.asList(split);\n' +
+    '        List<String> poseList = new ArrayList<String>();\n' +
+    '        \n' +
+    '        try{\n' +
+    '            for(String pose : list){\n' +
+    '                String poseString = pose;\n' +
+    '                poseString = poseString.replace("{", "").replace("}", "").replace("\\"", "");\n' +
+    '                String[] splitPoseString = poseString.split(",");\n' +
+    '                String name = splitPoseString[1].split(":")[1];\n' +
+    '                String breath = splitPoseString[2].split(":")[1];\n' +
+    '                String desc = splitPoseString[3].split(":")[1];\n' +
+    '                poseList.add(name);\n' +
+    '            }\n' +
+    '        } catch(Exception e){\n' +
+    '            poseList = null;\n' +
+    '            logger.warning("Exception! " + e);\n' +
+    '        }\n' +
+    '        logger.warning("I am a warning log ! " + poseList.get(0));\n' +
+    '\t\t\n' +
+    '      return poseList;\n' +
+    '    }\n' +
+    '    \n' +
+    '}\n' +
+    '\n' +
+    '----------------------------------- SOURCE END -------------------------------------\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:40.840'
+}
+{
+  message: '[Error - 3:37:40 PM] Nov 12, 2023, 3:37:40 PM Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:40.845'
+}
+{
+  message: '[Error - 3:37:40 PM] Nov 12, 2023, 3:37:40 PM Error in JDT Core during AST creation\n' +
+    'null\n' +
+    'java.lang.IllegalArgumentException\n' +
+    '\tat org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3853)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3095)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3390)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)\n' +
+    '\tat org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:323)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1271)\n' +
+    '\tat org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:272)\n' +
+    '\tat org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:264)\n' +
+    '\tat org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:197)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getASTRoot(CodeActionHandler.java:320)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.CodeActionHandler.getCodeActionCommands(CodeActionHandler.java:122)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.JDTLanguageServer.lambda$15(JDTLanguageServer.java:649)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.BaseJDTLanguageServer.lambda$0(BaseJDTLanguageServer.java:75)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\n' +
+    '\tat java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\n' +
+    '\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\n',
+  level: 'info',
+  timestamp: '2023-11-12 15:37:40.846'
+}
+{
+  message: 'Starting Java server with: /usr/lib/jvm/java-17-openjdk-amd64/bin/java --add-modules=ALL-SYSTEM --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED -Declipse.application=org.eclipse.jdt.ls.core.id1 -Dosgi.bundles.defaultStartLevel=4 -Declipse.product=org.eclipse.jdt.ls.core.product -Djava.import.generatesMetadataFilesAtProjectRoot=false -Dfile.encoding=utf8 -XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G -Xms100m -jar /google/devshell/editor/theia/plugins/redhat.java-1.2.0/extension/server/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar -configuration /home/anirudh_shenoy25/.theia/globalStorage/redhat.java/1.2.0/config_ss_linux -data /home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/ss_ws',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:29.808'
+}
+{
+  message: 'WARNING: Using incubator modules: jdk.incubator.vector, jdk.incubator.foreign\n',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:30.002'
+}
+{
+  message: 'Starting Java server with: /usr/lib/jvm/java-17-openjdk-amd64/bin/java --add-modules=ALL-SYSTEM --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED -Declipse.application=org.eclipse.jdt.ls.core.id1 -Dosgi.bundles.defaultStartLevel=4 -Declipse.product=org.eclipse.jdt.ls.core.product -Djava.import.generatesMetadataFilesAtProjectRoot=false -Dfile.encoding=utf8 -XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G -Xms100m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java -jar /google/devshell/editor/theia/plugins/redhat.java-1.2.0/extension/server/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar -configuration /home/anirudh_shenoy25/.theia/globalStorage/redhat.java/1.2.0/config_linux -data /home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/jdt_ws',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:30.127'
+}
+{
+  message: 'WARNING: Using incubator modules: jdk.incubator.vector, jdk.incubator.foreign\n',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:30.310'
+}
+{
+  message: '[Error - 4:17:35 PM] Nov 12, 2023, 4:17:35 PM Failed to create invisible project\n' +
+    "Failed to create linked resource from '/home/anirudh_shenoy25' to the invisible project 'anirudh_shenoy25_e81075a8'.\n" +
+    "org.eclipse.core.runtime.CoreException: Failed to create linked resource from '/home/anirudh_shenoy25' to the invisible project 'anirudh_shenoy25_e81075a8'.\n" +
+    '\tat org.eclipse.jdt.ls.core.internal.ProjectUtils.createInvisibleProjectIfNotExist(ProjectUtils.java:343)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.syntaxserver.SyntaxDocumentLifeCycleHandler.tryUpdateClasspath(SyntaxDocumentLifeCycleHandler.java:104)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.syntaxserver.SyntaxDocumentLifeCycleHandler.resolveCompilationUnit(SyntaxDocumentLifeCycleHandler.java:88)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.handleOpen(BaseDocumentLifeCycleHandler.java:350)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler$5.run(BaseDocumentLifeCycleHandler.java:310)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2313)\n' +
+    '\tat org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2338)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.handlers.BaseDocumentLifeCycleHandler.didOpen(BaseDocumentLifeCycleHandler.java:307)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.syntaxserver.SyntaxLanguageServer.didOpen(SyntaxLanguageServer.java:264)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n' +
+    '\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n' +
+    '\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n' +
+    '\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$null$0(GenericEndpoint.java:65)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:152)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:220)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:187)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.ParentProcessWatcher.lambda$0(ParentProcessWatcher.java:123)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:194)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:94)\n' +
+    '\tat org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:113)\n' +
+    '\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n' +
+    '\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n' +
+    '\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n' +
+    '\tat java.base/java.lang.Thread.run(Thread.java:833)\n' +
+    "Caused by: org.eclipse.core.internal.resources.ResourceException: '/home/anirudh_shenoy25' is not a valid location for linked resources.\n" +
+    '\tat org.eclipse.core.internal.resources.Resource.assertLinkRequirements(Resource.java:170)\n' +
+    '\tat org.eclipse.core.internal.resources.Resource.createLink(Resource.java:636)\n' +
+    '\tat org.eclipse.jdt.ls.core.internal.ProjectUtils.createInvisibleProjectIfNotExist(ProjectUtils.java:327)\n' +
+    '\t... 25 more\n',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:35.426'
+}
+{
+  message: '[Error - 4:17:43 PM] Connection to server got closed. Server will not be restarted.',
+  level: 'info',
+  timestamp: '2023-11-12 16:17:43.148'
+}

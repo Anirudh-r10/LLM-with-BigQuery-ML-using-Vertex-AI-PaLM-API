@@ -1,0 +1,24 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 2
+    },
+    "auditLog": "/home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/.c0aba3870128554815fcb41f55738a0f9a859a72-audit.json",
+    "files": [
+        {
+            "date": 1699798177602,
+            "name": "/home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/client.log.2023-11-12",
+            "hash": "6a26407e37f7ae0186f7fa5f3144ae6d"
+        },
+        {
+            "date": 1699803384464,
+            "name": "/home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/client.log.2023-11-12.1",
+            "hash": "1eccd3d71b66f48f296a007284fb7167"
+        },
+        {
+            "date": 1699803458221,
+            "name": "/home/anirudh_shenoy25/.theia/workspace-storage/0d23d3f864657d34c09ea18c361a7c68/redhat.java/client.log.2023-11-12.2",
+            "hash": "14fe445fab150b27d2814bf72ec31afd"
+        }
+    ]
+}
