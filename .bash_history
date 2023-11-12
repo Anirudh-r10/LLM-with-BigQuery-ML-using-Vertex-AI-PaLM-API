@@ -30,3 +30,12 @@ mvn -N io.takari:maven:wrapper
 gcloud run deploy --source .
 git clone https://github.com/Anirudh-r10/SQL-only-LLM-with-BigQuery-ML-using-Vertex-AI-PaLM-API
 git init
+git add .
+git commit -m "Added BigQuery resources"
+git config --global user.email "anirudh.shenoy25@gmail.com"
+git config --global user.name "Anirudh-r10"
+git commit -m "Added BigQuery resources"
+git clone https://github.com/Anirudh-r10/SQL-only-LLM-with-BigQuery-ML-using-Vertex-AI-PaLM-API
+git clone https://github.com/Anirudh-r10/SQL-only-LLM-with-BigQuery-ML-using-Vertex-AI-PaLM-API.git
+git clone https://github.com/Anirudh-r10/LLM-with-BigQuery-ML-using-Vertex-AI-PaLM-API.git
+git init

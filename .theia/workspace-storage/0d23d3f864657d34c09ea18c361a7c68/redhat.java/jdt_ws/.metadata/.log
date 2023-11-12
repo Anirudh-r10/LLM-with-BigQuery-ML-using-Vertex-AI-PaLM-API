@@ -7132,3 +7132,12 @@ java.io.EOFException
 
 !ENTRY org.eclipse.jdt.ls.core 1 0 2023-11-12 16:52:27.525
 !MESSAGE >> workspace/executeCommand vscode.java.resolveMainMethod
+
+!ENTRY org.eclipse.jdt.ls.core 1 0 2023-11-12 17:18:15.835
+!MESSAGE >> document/hover
+
+!ENTRY org.eclipse.jdt.ls.core 1 0 2023-11-12 17:18:15.890
+!MESSAGE >> java/findLinks
+
+!ENTRY org.eclipse.jdt.ls.core 1 0 2023-11-12 17:28:07.446
+!MESSAGE >> document/hover
